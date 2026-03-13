@@ -12,8 +12,9 @@ import {
   Anchor,
   Alert,
   Button,
+  Divider,
 } from "@mantine/core";
-import { IconRocket } from "@tabler/icons-react";
+import { IconRocket, IconBrandGoogle } from "@tabler/icons-react";
 
 interface LoginPageProps {
   onLogin: (email: string, token: string) => void;
@@ -71,6 +72,16 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               {error}
             </Alert>
           )}
+          <Button
+            fullWidth
+            variant="default"
+            leftSection={<IconBrandGoogle size={18} />}
+            component="a"
+            href="/api/auth/google"
+          >
+            Continue with Google
+          </Button>
+          <Divider label="Or continue with email" labelPosition="center" />
           <form onSubmit={handleSubmit}>
             <Stack>
               <TextInput

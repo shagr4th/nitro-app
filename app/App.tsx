@@ -32,6 +32,20 @@ export default function App() {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
+    // Handle OAuth callback: token & email come back as query params
+    const params = new URLSearchParams(window.location.search);
+    const oauthToken = params.get("token");
+    const oauthEmail = params.get("email");
+    if (oauthToken && oauthEmail) {
+      localStorage.setItem("token", oauthToken);
+      setUsername(oauthEmail);
+      setLoggedIn(true);
+      setCheckingAuth(false);
+      window.history.replaceState({}, "", "/");
+      return;
+    }
+
+    // Check existing token
     const token = localStorage.getItem("token");
     if (!token) {
       setCheckingAuth(false);
