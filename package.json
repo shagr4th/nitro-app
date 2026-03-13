@@ -1,0 +1,22 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "nitro": "latest",
+    "vite": "beta"
+  },
+  "dependencies": {
+    "@mantine/core": "^8.3.16",
+    "@mantine/hooks": "^8.3.16",
+    "@tabler/icons-react": "^3.40.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  }
+}
