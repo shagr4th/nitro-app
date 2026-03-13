@@ -10,6 +10,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "nitro": "latest",
+    "typescript": "^5.9.3",
     "vite": "beta"
   },
   "dependencies": {

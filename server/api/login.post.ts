@@ -9,7 +9,8 @@ const DEMO_USER = {
 export const tokenStore = new Map<string, { email: string }>();
 
 export default defineHandler(async (event) => {
-  const { email, password } = await readBody(event);
+  const body = await readBody(event);
+  const { email, password } = body as { email: string; password: string };
 
   if (!email || !password) {
     throw HTTPError.status(400, "Email and password are required");
