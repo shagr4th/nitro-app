@@ -18,6 +18,14 @@ await db.schema
   .addColumn("oauth_provider", "text")
   .addColumn("oauth_id", "text")
   .addColumn("name", "text")
+  .addColumn("admin", "integer", (col) => col.notNull().defaultTo(0))
   .addColumn("created_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
   .addColumn("updated_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
   .execute();
+
+// Migration: add admin column to existing tables
+await db.schema
+  .alterTable("users")
+  .addColumn("admin", "integer", (col) => col.notNull().defaultTo(0))
+  .execute()
+  .catch(() => { /* column already exists */ });

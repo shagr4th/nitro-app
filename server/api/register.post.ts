@@ -34,7 +34,7 @@ export default defineHandler(async (event) => {
     .executeTakeFirstOrThrow();
 
   const token = crypto.randomUUID();
-  tokenStore.set(token, { email: user.email });
+  tokenStore.set(token, { email: user.email, admin: false });
 
-  return { ok: true, token, user: { email: user.email, name: user.name } };
+  return { ok: true, token, user: { email: user.email, name: user.name, admin: false } };
 });

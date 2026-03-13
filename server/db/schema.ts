@@ -7,6 +7,7 @@ export interface UsersTable {
   oauth_provider: string | null;
   oauth_id: string | null;
   name: string | null;
+  admin: Generated<number>;
   created_at: Generated<string>;
   updated_at: Generated<string>;
 }

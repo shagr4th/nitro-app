@@ -1,8 +1,9 @@
-import { defineHandler, getHeader, HTTPError } from "nitro/h3";
-import { tokenStore } from "./login.post";
+import type { H3Event } from "nitro/h3";
+import { getHeader, HTTPError } from "nitro/h3";
+import { tokenStore } from "../api/login.post";
 import { db } from "../db";
 
-export default defineHandler(async (event) => {
+export async function requireAdmin(event: H3Event) {
   const auth = getHeader(event, "authorization");
   const token = auth?.replace("Bearer ", "");
 
@@ -17,13 +18,13 @@ export default defineHandler(async (event) => {
 
   const user = await db
     .selectFrom("users")
-    .select(["id", "email", "name", "admin"])
+    .selectAll()
     .where("email", "=", session.email)
     .executeTakeFirst();
 
-  if (!user) {
-    throw HTTPError.status(401, "User not found");
+  if (!user || !user.admin) {
+    throw HTTPError.status(403, "Admin access required");
   }
 
-  return { user: { email: user.email, name: user.name, admin: !!user.admin } };
-});
+  return user;
+}

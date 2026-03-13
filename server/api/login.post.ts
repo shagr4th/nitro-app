@@ -3,7 +3,7 @@ import { db } from "../db";
 import { verifyPassword } from "../utils/hash";
 
 // In-memory token store (use a real session store in production)
-export const tokenStore = new Map<string, { email: string }>();
+export const tokenStore = new Map<string, { email: string; admin: boolean }>();
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);
@@ -29,7 +29,8 @@ export default defineHandler(async (event) => {
   }
 
   const token = crypto.randomUUID();
-  tokenStore.set(token, { email: user.email });
+  const admin = !!user.admin;
+  tokenStore.set(token, { email: user.email, admin });
 
-  return { ok: true, token, user: { email: user.email, name: user.name } };
+  return { ok: true, token, user: { email: user.email, name: user.name, admin } };
 });

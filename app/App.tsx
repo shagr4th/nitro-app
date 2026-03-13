@@ -19,10 +19,12 @@ import {
   IconSettings,
   IconRocket,
   IconUser,
+  IconUsers,
 } from "@tabler/icons-react";
 import "@mantine/core/styles.css";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
+import UsersPage from "./UsersPage";
 
 export default function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -30,6 +32,7 @@ export default function App() {
   const [apiResponse, setApiResponse] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [authPage, setAuthPage] = useState<"login" | "register">("login");
 
@@ -59,6 +62,7 @@ export default function App() {
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
         setUsername(data.user.email);
+        setIsAdmin(!!data.user.admin);
         setLoggedIn(true);
       })
       .catch(() => {
@@ -71,6 +75,7 @@ export default function App() {
     { icon: IconHome, label: "Home" },
     { icon: IconApi, label: "API Test" },
     { icon: IconSettings, label: "Settings" },
+    ...(isAdmin ? [{ icon: IconUsers, label: "Users" }] : []),
   ];
 
   const callApi = async () => {
@@ -83,6 +88,7 @@ export default function App() {
     localStorage.removeItem("token");
     setLoggedIn(false);
     setUsername("");
+    setIsAdmin(false);
   };
 
   if (checkingAuth) {
@@ -94,7 +100,7 @@ export default function App() {
   }
 
   if (!loggedIn) {
-    const handleAuth = (email: string) => { setUsername(email); setLoggedIn(true); };
+    const handleAuth = (email: string) => { setUsername(email); setLoggedIn(true); setIsAdmin(false); };
     return (
       <MantineProvider defaultColorScheme="dark">
         {authPage === "login" ? (
@@ -174,6 +180,8 @@ export default function App() {
               <Text c="dimmed">Nothing here yet.</Text>
             </Stack>
           )}
+
+          {active === 3 && isAdmin && <UsersPage />}
         </AppShell.Main>
       </AppShell>
     </MantineProvider>
