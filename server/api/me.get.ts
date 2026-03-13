@@ -1,5 +1,5 @@
 import { defineHandler, getHeader, HTTPError } from "nitro/h3";
-import { tokenStore } from "./login.post";
+import { getSession } from "../utils/sessions";
 import { db } from "../db";
 
 export default defineHandler(async (event) => {
@@ -10,7 +10,7 @@ export default defineHandler(async (event) => {
     throw HTTPError.status(401, "Not authenticated");
   }
 
-  const session = tokenStore.get(token);
+  const session = await getSession(token);
   if (!session) {
     throw HTTPError.status(401, "Invalid token");
   }

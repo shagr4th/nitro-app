@@ -1,6 +1,6 @@
 import type { H3Event } from "nitro/h3";
 import { getHeader, HTTPError } from "nitro/h3";
-import { tokenStore } from "../api/login.post";
+import { getSession } from "./sessions";
 import { db } from "../db";
 
 export async function requireAdmin(event: H3Event) {
@@ -11,7 +11,7 @@ export async function requireAdmin(event: H3Event) {
     throw HTTPError.status(401, "Not authenticated");
   }
 
-  const session = tokenStore.get(token);
+  const session = await getSession(token);
   if (!session) {
     throw HTTPError.status(401, "Invalid token");
   }

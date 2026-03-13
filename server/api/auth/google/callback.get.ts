@@ -1,6 +1,6 @@
 import { defineHandler, getQuery, redirect, HTTPError } from "nitro/h3";
-import { tokenStore } from "../../login.post";
 import { db } from "../../../db";
+import { createSession } from "../../../utils/sessions";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
@@ -74,14 +74,7 @@ export default defineHandler(async (event) => {
   }
 
   // Create a session token
-  const dbUser = await db
-    .selectFrom("users")
-    .select(["admin"])
-    .where("email", "=", userInfo.email)
-    .executeTakeFirst();
-
-  const sessionToken = crypto.randomUUID();
-  tokenStore.set(sessionToken, { email: userInfo.email, admin: !!dbUser?.admin });
+  const sessionToken = await createSession(userInfo.email);
 
   // Redirect back to the app with the token
   return redirect(`/?token=${sessionToken}&email=${encodeURIComponent(userInfo.email)}`);

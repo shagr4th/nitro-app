@@ -1,7 +1,7 @@
 import { defineHandler, readBody, HTTPError } from "nitro/h3";
 import { db } from "../db";
 import { hashPassword } from "../utils/hash";
-import { tokenStore } from "./login.post";
+import { createSession } from "../utils/sessions";
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);
@@ -33,8 +33,7 @@ export default defineHandler(async (event) => {
     .returningAll()
     .executeTakeFirstOrThrow();
 
-  const token = crypto.randomUUID();
-  tokenStore.set(token, { email: user.email, admin: false });
+  const token = await createSession(user.email);
 
   return { ok: true, token, user: { email: user.email, name: user.name, admin: false } };
 });

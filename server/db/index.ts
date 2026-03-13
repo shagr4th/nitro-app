@@ -23,6 +23,14 @@ await db.schema
   .addColumn("updated_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
   .execute();
 
+await db.schema
+  .createTable("sessions")
+  .ifNotExists()
+  .addColumn("token", "text", (col) => col.primaryKey())
+  .addColumn("email", "text", (col) => col.notNull())
+  .addColumn("created_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
+  .execute();
+
 // Migration: add admin column to existing tables
 await db.schema
   .alterTable("users")

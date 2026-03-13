@@ -12,8 +12,15 @@ export interface UsersTable {
   updated_at: Generated<string>;
 }
 
+export interface SessionsTable {
+  token: string;
+  email: string;
+  created_at: Generated<string>;
+}
+
 export interface Database {
   users: UsersTable;
+  sessions: SessionsTable;
 }
 
 export type User = Selectable<UsersTable>;
