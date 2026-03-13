@@ -8,50 +8,56 @@ import {
   Text,
   TextInput,
   PasswordInput,
-  Checkbox,
-  Anchor,
   Alert,
   Button,
-  Divider,
+  Anchor,
 } from "@mantine/core";
-import { IconRocket, IconBrandGoogle } from "@tabler/icons-react";
+import { IconRocket } from "@tabler/icons-react";
 
-interface LoginPageProps {
-  onLogin: (email: string, token: string) => void;
-  onSwitchToRegister: () => void;
+interface RegisterPageProps {
+  onRegister: (email: string, token: string) => void;
+  onSwitchToLogin: () => void;
 }
 
-export default function LoginPage({ onLogin, onSwitchToRegister }: LoginPageProps) {
+export default function RegisterPage({ onRegister, onSwitchToLogin }: RegisterPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
+    const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, name }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.statusMessage || "Login failed");
+        throw new Error(err?.statusMessage || "Registration failed");
       }
 
       const data = await res.json();
       localStorage.setItem("token", data.token);
-      onLogin(data.user.email, data.token);
+      onRegister(data.user.email, data.token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -66,25 +72,20 @@ export default function LoginPage({ onLogin, onSwitchToRegister }: LoginPageProp
             <Title order={2}>Nitro + Vite</Title>
           </Group>
           <Text c="dimmed" ta="center" size="sm">
-            Sign in to continue
+            Create your account
           </Text>
           {error && (
             <Alert color="red" variant="light">
               {error}
             </Alert>
           )}
-          <Button
-            fullWidth
-            variant="default"
-            leftSection={<IconBrandGoogle size={18} />}
-            component="a"
-            href="/api/auth/google"
-          >
-            Continue with Google
-          </Button>
-          <Divider label="Or continue with email" labelPosition="center" />
           <form onSubmit={handleSubmit}>
             <Stack>
+              <TextInput
+                name="name"
+                label="Name"
+                placeholder="Your name"
+              />
               <TextInput
                 name="email"
                 label="Email"
@@ -97,19 +98,21 @@ export default function LoginPage({ onLogin, onSwitchToRegister }: LoginPageProp
                 placeholder="Your password"
                 required
               />
-              <Group justify="space-between">
-                <Checkbox label="Remember me" />
-                <Anchor size="sm">Forgot password?</Anchor>
-              </Group>
+              <PasswordInput
+                name="confirmPassword"
+                label="Confirm password"
+                placeholder="Repeat your password"
+                required
+              />
               <Button type="submit" fullWidth loading={loading}>
-                Sign in
+                Create account
               </Button>
             </Stack>
           </form>
           <Text ta="center" size="sm">
-            Don't have an account?{" "}
-            <Anchor size="sm" onClick={onSwitchToRegister}>
-              Create one
+            Already have an account?{" "}
+            <Anchor size="sm" onClick={onSwitchToLogin}>
+              Sign in
             </Anchor>
           </Text>
         </Stack>

@@ -1,11 +1,8 @@
 import { defineHandler, readBody, HTTPError } from "nitro/h3";
+import { db } from "../db";
+import { verifyPassword } from "../utils/hash";
 
-const DEMO_USER = {
-  email: "admin@example.com",
-  password: "password",
-};
-
-// In-memory token store (demo only — use a real session store in production)
+// In-memory token store (use a real session store in production)
 export const tokenStore = new Map<string, { email: string }>();
 
 export default defineHandler(async (event) => {
@@ -16,11 +13,23 @@ export default defineHandler(async (event) => {
     throw HTTPError.status(400, "Email and password are required");
   }
 
-  if (email === DEMO_USER.email && password === DEMO_USER.password) {
-    const token = crypto.randomUUID();
-    tokenStore.set(token, { email });
-    return { ok: true, token, user: { email } };
+  const user = await db
+    .selectFrom("users")
+    .selectAll()
+    .where("email", "=", email)
+    .executeTakeFirst();
+
+  if (!user || !user.password_hash) {
+    throw HTTPError.status(401, "Invalid email or password");
   }
 
-  throw HTTPError.status(401, "Invalid email or password");
+  const valid = await verifyPassword(password, user.password_hash);
+  if (!valid) {
+    throw HTTPError.status(401, "Invalid email or password");
+  }
+
+  const token = crypto.randomUUID();
+  tokenStore.set(token, { email: user.email });
+
+  return { ok: true, token, user: { email: user.email, name: user.name } };
 });

@@ -22,6 +22,7 @@ import {
 } from "@tabler/icons-react";
 import "@mantine/core/styles.css";
 import LoginPage from "./LoginPage";
+import RegisterPage from "./RegisterPage";
 
 export default function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -30,6 +31,7 @@ export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authPage, setAuthPage] = useState<"login" | "register">("login");
 
   useEffect(() => {
     // Handle OAuth callback: token & email come back as query params
@@ -92,9 +94,14 @@ export default function App() {
   }
 
   if (!loggedIn) {
+    const handleAuth = (email: string) => { setUsername(email); setLoggedIn(true); };
     return (
       <MantineProvider defaultColorScheme="dark">
-        <LoginPage onLogin={(email) => { setUsername(email); setLoggedIn(true); }} />
+        {authPage === "login" ? (
+          <LoginPage onLogin={handleAuth} onSwitchToRegister={() => setAuthPage("register")} />
+        ) : (
+          <RegisterPage onRegister={handleAuth} onSwitchToLogin={() => setAuthPage("login")} />
+        )}
       </MantineProvider>
     );
   }

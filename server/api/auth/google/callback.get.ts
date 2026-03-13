@@ -1,5 +1,6 @@
 import { defineHandler, getQuery, redirect, HTTPError } from "nitro/h3";
 import { tokenStore } from "../../login.post";
+import { db } from "../../../db";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
@@ -40,7 +41,37 @@ export default defineHandler(async (event) => {
     throw HTTPError.status(401, "Failed to fetch user info");
   }
 
-  const userInfo = await userRes.json() as { email: string };
+  const userInfo = await userRes.json() as { id: string; email: string; name?: string };
+
+  // Upsert user in database
+  const existing = await db
+    .selectFrom("users")
+    .selectAll()
+    .where("email", "=", userInfo.email)
+    .executeTakeFirst();
+
+  if (existing) {
+    await db
+      .updateTable("users")
+      .set({
+        oauth_provider: "google",
+        oauth_id: userInfo.id,
+        name: userInfo.name || existing.name,
+        updated_at: new Date().toISOString(),
+      })
+      .where("id", "=", existing.id)
+      .execute();
+  } else {
+    await db
+      .insertInto("users")
+      .values({
+        email: userInfo.email,
+        oauth_provider: "google",
+        oauth_id: userInfo.id,
+        name: userInfo.name || null,
+      })
+      .execute();
+  }
 
   // Create a session token
   const sessionToken = crypto.randomUUID();
