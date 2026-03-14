@@ -15,7 +15,7 @@ import {
   LoadingOverlay,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconEdit, IconTrash, IconPlus, IconShield } from "@tabler/icons-react";
 
 interface User {
   id: number;
@@ -39,6 +39,7 @@ export default function UsersPage() {
   const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
   const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const [rightsOpened, { open: openRights, close: closeRights }] = useDisclosure(false);
   const [selected, setSelected] = useState<User | null>(null);
 
   const [createName, setCreateName] = useState("");
@@ -50,6 +51,9 @@ export default function UsersPage() {
   const [editEmail, setEditEmail] = useState("");
   const [editAdmin, setEditAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [userRights, setUserRights] = useState<string[]>([]);
+  const [newRight, setNewRight] = useState("");
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -79,6 +83,50 @@ export default function UsersPage() {
   const handleDelete = (user: User) => {
     setSelected(user);
     openDelete();
+  };
+
+  const handleRights = async (user: User) => {
+    setSelected(user);
+    setNewRight("");
+    try {
+      const res = await fetch(`/api/users/${user.id}/rights`, { headers: authHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch rights");
+      const data = await res.json();
+      setUserRights(data.rights);
+    } catch {
+      setUserRights([]);
+    }
+    openRights();
+  };
+
+  const saveRights = async (rights: string[]) => {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/users/${selected.id}/rights`, {
+        method: "PUT",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ rights }),
+      });
+      if (!res.ok) throw new Error("Failed to update rights");
+      setUserRights(rights);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update rights");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addRight = () => {
+    const trimmed = newRight.trim();
+    if (!trimmed || userRights.includes(trimmed)) return;
+    const updated = [...userRights, trimmed];
+    setNewRight("");
+    saveRights(updated);
+  };
+
+  const removeRight = (right: string) => {
+    saveRights(userRights.filter((r) => r !== right));
   };
 
   const saveEdit = async () => {
@@ -190,6 +238,9 @@ export default function UsersPage() {
               <Table.Td>{new Date(user.created_at).toLocaleDateString()}</Table.Td>
               <Table.Td>
                 <Group gap="xs">
+                  <ActionIcon variant="subtle" color="teal" onClick={() => handleRights(user)}>
+                    <IconShield size={16} />
+                  </ActionIcon>
                   <ActionIcon variant="subtle" onClick={() => handleEdit(user)}>
                     <IconEdit size={16} />
                   </ActionIcon>
@@ -228,6 +279,32 @@ export default function UsersPage() {
           <Group justify="flex-end">
             <Button variant="default" onClick={closeDelete}>Cancel</Button>
             <Button color="red" onClick={confirmDelete} loading={saving}>Delete</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={rightsOpened} onClose={closeRights} title={`Rights — ${selected?.email}`} centered>
+        <Stack>
+          {userRights.length === 0 && (
+            <Text c="dimmed" size="sm">No rights assigned.</Text>
+          )}
+          {userRights.map((right) => (
+            <Group key={right} justify="space-between">
+              <Badge variant="light" color="teal">{right}</Badge>
+              <ActionIcon variant="subtle" color="red" size="sm" onClick={() => removeRight(right)} disabled={saving}>
+                <IconTrash size={14} />
+              </ActionIcon>
+            </Group>
+          ))}
+          <Group>
+            <TextInput
+              placeholder="e.g. reports:read"
+              value={newRight}
+              onChange={(e) => setNewRight(e.currentTarget.value)}
+              onKeyDown={(e) => e.key === "Enter" && addRight()}
+              style={{ flex: 1 }}
+            />
+            <Button size="sm" onClick={addRight} loading={saving} disabled={!newRight.trim()}>Add</Button>
           </Group>
         </Stack>
       </Modal>

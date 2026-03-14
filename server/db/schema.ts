@@ -19,9 +19,17 @@ export interface SessionsTable {
   created_at: Generated<string>;
 }
 
+export interface UserRightsTable {
+  id: Generated<number>;
+  user_id: number;
+  right: string;
+  created_at: Generated<string>;
+}
+
 export interface Database {
   users: UsersTable;
   sessions: SessionsTable;
+  user_rights: UserRightsTable;
 }
 
 export type User = Selectable<UsersTable>;

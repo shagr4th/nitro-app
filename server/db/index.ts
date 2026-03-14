@@ -2,8 +2,11 @@ import SQLite from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import type { Database } from "./schema";
 
+const sqliteDb = new SQLite("data.db");
+sqliteDb.pragma("foreign_keys = ON");
+
 const dialect = new SqliteDialect({
-  database: new SQLite("data.db"),
+  database: sqliteDb,
 });
 
 export const db = new Kysely<Database>({ dialect });
@@ -45,3 +48,12 @@ await db.schema
   .addColumn("expires_at", "text", (col) => col.notNull().defaultTo(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()))
   .execute()
   .catch(() => { /* column already exists */ });
+
+await db.schema
+  .createTable("user_rights")
+  .ifNotExists()
+  .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+  .addColumn("user_id", "integer", (col) => col.notNull().references("users.id").onDelete("cascade"))
+  .addColumn("right", "text", (col) => col.notNull())
+  .addColumn("created_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
+  .execute();
