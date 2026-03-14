@@ -28,6 +28,7 @@ await db.schema
   .ifNotExists()
   .addColumn("token", "text", (col) => col.primaryKey())
   .addColumn("email", "text", (col) => col.notNull())
+  .addColumn("expires_at", "text", (col) => col.notNull())
   .addColumn("created_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
   .execute();
 
@@ -35,5 +36,12 @@ await db.schema
 await db.schema
   .alterTable("users")
   .addColumn("admin", "integer", (col) => col.notNull().defaultTo(0))
+  .execute()
+  .catch(() => { /* column already exists */ });
+
+// Migration: add expires_at column to sessions
+await db.schema
+  .alterTable("sessions")
+  .addColumn("expires_at", "text", (col) => col.notNull().defaultTo(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()))
   .execute()
   .catch(() => { /* column already exists */ });

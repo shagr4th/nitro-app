@@ -15,6 +15,7 @@ export interface UsersTable {
 export interface SessionsTable {
   token: string;
   email: string;
+  expires_at: string;
   created_at: Generated<string>;
 }
 
