@@ -41,7 +41,7 @@ export default defineHandler(async (event) => {
     throw HTTPError.status(401, "Failed to fetch user info");
   }
 
-  const userInfo = await userRes.json() as { id: string; email: string; name?: string };
+  const userInfo = await userRes.json() as { id: string; email: string; name?: string; picture?: string };
 
   // Upsert user in database
   const existing = await db
@@ -57,6 +57,7 @@ export default defineHandler(async (event) => {
         oauth_provider: "google",
         oauth_id: userInfo.id,
         name: userInfo.name || existing.name,
+        picture: userInfo.picture || existing.picture,
         updated_at: new Date().toISOString(),
       })
       .where("id", "=", existing.id)
@@ -69,6 +70,7 @@ export default defineHandler(async (event) => {
         oauth_provider: "google",
         oauth_id: userInfo.id,
         name: userInfo.name || null,
+        picture: userInfo.picture || null,
       })
       .execute();
   }

@@ -16,8 +16,9 @@
     "vite": "beta"
   },
   "dependencies": {
-    "@mantine/core": "^8.3.16",
-    "@mantine/hooks": "^8.3.16",
+    "@mantine/core": "^9.0.0",
+    "@mantine/form": "^9.0.0",
+    "@mantine/hooks": "^9.0.0",
     "@tabler/icons-react": "^3.40.0",
     "better-sqlite3": "^12.6.2",
     "kysely": "^0.28.11",

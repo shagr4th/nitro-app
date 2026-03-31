@@ -35,6 +35,13 @@ await db.schema
   .addColumn("created_at", "text", (col) => col.notNull().defaultTo(new Date().toISOString()))
   .execute();
 
+// Migration: add picture column to users
+await db.schema
+  .alterTable("users")
+  .addColumn("picture", "text")
+  .execute()
+  .catch(() => { /* column already exists */ });
+
 // Migration: add admin column to existing tables
 await db.schema
   .alterTable("users")

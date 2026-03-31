@@ -16,8 +16,7 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconHome,
   IconApi,
-  IconSettings,
-  IconRocket,
+IconRocket,
   IconUser,
   IconUsers,
 } from "@tabler/icons-react";
@@ -25,6 +24,7 @@ import "@mantine/core/styles.css";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
 import UsersPage from "./UsersPage";
+import ProfilePage from "./ProfilePage";
 
 export default function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -32,25 +32,23 @@ export default function App() {
   const [apiResponse, setApiResponse] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userPicture, setUserPicture] = useState<string | null>(null);
+  const [oauthProvider, setOauthProvider] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState(0);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [authPage, setAuthPage] = useState<"login" | "register">("login");
 
   useEffect(() => {
-    // Handle OAuth callback: token & email come back as query params
+    // Handle OAuth callback: token comes back as a query param
     const params = new URLSearchParams(window.location.search);
     const oauthToken = params.get("token");
-    const oauthEmail = params.get("email");
-    if (oauthToken && oauthEmail) {
+    if (oauthToken) {
       localStorage.setItem("token", oauthToken);
-      setUsername(oauthEmail);
-      setLoggedIn(true);
-      setCheckingAuth(false);
       window.history.replaceState({}, "", "/");
-      return;
     }
 
-    // Check existing token
     const token = localStorage.getItem("token");
     if (!token) {
       setCheckingAuth(false);
@@ -62,7 +60,11 @@ export default function App() {
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
         setUsername(data.user.email);
+        setUserName(data.user.name ?? "");
+        setUserPicture(data.user.picture ?? null);
+        setOauthProvider(data.user.oauth_provider ?? null);
         setIsAdmin(!!data.user.admin);
+        setUserId(data.user.id);
         setLoggedIn(true);
       })
       .catch(() => {
@@ -74,7 +76,7 @@ export default function App() {
   const navItems = [
     { icon: IconHome, label: "Home" },
     { icon: IconApi, label: "API Test" },
-    { icon: IconSettings, label: "Settings" },
+    { icon: IconUser, label: "Profile" },
     ...(isAdmin ? [{ icon: IconUsers, label: "Users" }] : []),
   ];
 
@@ -88,7 +90,11 @@ export default function App() {
     localStorage.removeItem("token");
     setLoggedIn(false);
     setUsername("");
+    setUserName("");
+    setUserPicture(null);
+    setOauthProvider(null);
     setIsAdmin(false);
+    setUserId(0);
   };
 
   if (checkingAuth) {
@@ -100,7 +106,7 @@ export default function App() {
   }
 
   if (!loggedIn) {
-    const handleAuth = (email: string) => { setUsername(email); setLoggedIn(true); setIsAdmin(false); };
+    const handleAuth = (email: string) => { setUsername(email); setLoggedIn(true); setIsAdmin(false); setUserId(0); };
     return (
       <MantineProvider defaultColorScheme="dark">
         {authPage === "login" ? (
@@ -175,10 +181,14 @@ export default function App() {
           )}
 
           {active === 2 && (
-            <Stack>
-              <Title order={2}>Settings</Title>
-              <Text c="dimmed">Nothing here yet.</Text>
-            </Stack>
+            <ProfilePage
+              email={username}
+              name={userName}
+              picture={userPicture}
+              oauthProvider={oauthProvider}
+              userId={userId}
+              onProfileUpdate={(name) => setUserName(name)}
+            />
           )}
 
           {active === 3 && isAdmin && <UsersPage />}

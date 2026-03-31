@@ -1,4 +1,4 @@
-import { defineHandler, getHeader, HTTPError } from "nitro/h3";
+import { defineHandler, readBody, getHeader, HTTPError } from "nitro/h3";
 import { getSession } from "../utils/sessions";
 import { db } from "../db";
 
@@ -17,7 +17,7 @@ export default defineHandler(async (event) => {
 
   const user = await db
     .selectFrom("users")
-    .select(["id", "email", "name", "picture", "oauth_provider", "admin"])
+    .select(["id", "email", "name"])
     .where("email", "=", session.email)
     .executeTakeFirst();
 
@@ -25,14 +25,26 @@ export default defineHandler(async (event) => {
     throw HTTPError.status(401, "User not found");
   }
 
+  const body = await readBody(event);
+  const { name } = body as { name?: string };
+
+  // Only update name (the fields supported by DB schema)
+  const updated = await db
+    .updateTable("users")
+    .set({
+      ...(name !== undefined && { name }),
+      updated_at: new Date().toISOString(),
+    })
+    .where("id", "=", user.id)
+    .returningAll()
+    .executeTakeFirstOrThrow();
+
   return {
     user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      picture: user.picture,
-      oauth_provider: user.oauth_provider,
-      admin: !!user.admin,
+      id: updated.id,
+      email: updated.email,
+      name: updated.name,
+      admin: !!updated.admin,
     },
   };
 });

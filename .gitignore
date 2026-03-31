@@ -7,3 +7,5 @@ dist
 .env
 .env.local
 data.db
+.agents/skills
+skills-lock.json
